@@ -137,21 +137,44 @@ public class NeuralNetworkGA {
         population.sort((a, b) -> Double.compare(b.fitness, a.fitness));
     }
 
+    //roulette wheel selection
     private List<Chromosome> selectNextGeneration(List<Chromosome> population, double mutationRate) {
         List<Chromosome> nextGeneration = new ArrayList<>();
         int eliteCount = (int) (0.1 * population.size()); // Keep top 10%
         nextGeneration.addAll(population.subList(0, eliteCount));
 
+        // Calculate the total fitness of the population
+        double totalFitness = population.stream()
+                .mapToDouble(Chromosome::getFitness)
+                .sum();
+
         Random rand = new Random();
+
+        // Method for selecting a parent using roulette wheel selection
+        Chromosome selectParent() {
+            double randomValue = rand.nextDouble() * totalFitness;
+            double cumulativeFitness = 0.0;
+            for (Chromosome chromosome : population) {
+                cumulativeFitness += chromosome.getFitness();
+                if (cumulativeFitness >= randomValue) {
+                    return chromosome;
+                }
+            }
+            return population.get(population.size() - 1); // Fallback, should rarely be needed
+        }
+
+        // Create the rest of the next generation using roulette wheel selection
         while (nextGeneration.size() < population.size()) {
-            Chromosome parent1 = population.get(rand.nextInt(eliteCount));
-            Chromosome parent2 = population.get(rand.nextInt(eliteCount));
+            Chromosome parent1 = selectParent();
+            Chromosome parent2 = selectParent();
             Chromosome offspring = parent1.crossover(parent2);
             offspring.mutate(mutationRate);
             nextGeneration.add(offspring);
         }
+
         return nextGeneration;
     }
+
 
     private double calculateLoss(double[] target, double[] predicted) {
         double loss = 0.0;
