@@ -96,15 +96,13 @@ public class ComputerDriver {
                 int[] hiddenLayerSizes = {2,1};
                 int outputSize = 1;
                 String activationType = "linear";
-                double learningRate = 0.01;
-                boolean useMomentum = false;
-                double momentumCoefficient = 0.9;
 
-                NeuralNetwork neuralNet = new NeuralNetwork(inputSize, hiddenLayerSizes, outputSize, activationType, learningRate, useMomentum, momentumCoefficient);
+                NeuralNetworkGA neuralNet = new NeuralNetworkGA(inputSize, hiddenLayerSizes, outputSize, activationType);
 
-                int maxEpochs = 1000;
-                double tolerance = 0.0001;
-                neuralNet.train(trainInputs, trainOutputs, tolerance, maxEpochs);
+                int populationSize = 100;
+                int generations = 200;
+                double mutationRate = 0.01;
+                neuralNet.trainGA(trainInputs, trainOutputs, populationSize, generations, mutationRate);
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = neuralNet.forwardPass(testInputs[t]);
@@ -121,8 +119,8 @@ public class ComputerDriver {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = neuralNet.getAvConvergenceRate();
-                totalACR += acrFold;
+                //double acrFold = neuralNet.getAvConvergenceRate();
+                //totalACR += acrFold;
             }
 
             double AACR = totalACR / 10;

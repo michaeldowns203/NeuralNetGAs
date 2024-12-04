@@ -16,12 +16,13 @@ public class NeuralNetworkGA {
         this.inputSize = inputSize;
         this.hiddenLayerSizes = hiddenLayerSizes;
         this.outputSize = outputSize;
-        this.activationType = activationType;
+        this.activationType = activationType.toLowerCase(); // Standardize activation type
         this.rand = new Random();
 
         initializeWeights();
     }
 
+    // Initialize weights and biases with random values
     private void initializeWeights() {
         weights = new ArrayList<>();
         biases = new ArrayList<>();
@@ -30,18 +31,22 @@ public class NeuralNetworkGA {
             weights.add(new double[inputSize][outputSize]);
             biases.add(new double[outputSize]);
         } else {
+            // Input to first hidden layer
             weights.add(new double[inputSize][hiddenLayerSizes[0]]);
             biases.add(new double[hiddenLayerSizes[0]]);
 
+            // Hidden layers
             for (int i = 1; i < hiddenLayerSizes.length; i++) {
                 weights.add(new double[hiddenLayerSizes[i - 1]][hiddenLayerSizes[i]]);
                 biases.add(new double[hiddenLayerSizes[i]]);
             }
 
+            // Last hidden layer to output layer
             weights.add(new double[hiddenLayerSizes[hiddenLayerSizes.length - 1]][outputSize]);
             biases.add(new double[outputSize]);
         }
 
+        // Initialize weights and biases with small random values
         for (double[][] layerWeights : weights) {
             for (int i = 0; i < layerWeights.length; i++) {
                 for (int j = 0; j < layerWeights[i].length; j++) {
@@ -80,6 +85,7 @@ public class NeuralNetworkGA {
         return output;
     }
 
+    // Perform a forward pass through the network
     public double[] forwardPass(double[] input) {
         double[] currentOutput = input;
 
@@ -91,15 +97,25 @@ public class NeuralNetworkGA {
                     z += currentOutput[k] * weights.get(i)[k][j];
                 }
                 z += biases.get(i)[j];
-                newOutput[j] = (i == weights.size() - 1 && activationType.equals("softmax")) ? z : sigmoid(z);
+
+                // Apply activation
+                if (i == weights.size() - 1 && activationType.equals("softmax")) {
+                    newOutput[j] = z; // Final layer before softmax
+                } else {
+                    newOutput[j] = sigmoid(z);
+                }
             }
-            currentOutput = (i == weights.size() - 1 && activationType.equals("softmax")) ? softmax(newOutput) : newOutput;
+
+            // Update currentOutput
+            currentOutput = (i == weights.size() - 1 && activationType.equals("softmax"))
+                    ? softmax(newOutput)
+                    : newOutput;
         }
 
         return currentOutput;
     }
 
-    // Genetic Algorithm
+    // Train the network using a genetic algorithm
     public void trainGA(double[][] inputData, double[][] targetData, int populationSize, int generations, double mutationRate) {
         List<Chromosome> population = initializePopulation(populationSize);
 
@@ -112,15 +128,14 @@ public class NeuralNetworkGA {
             }
         }
 
-        // Set best weights and biases
+        // Set the best weights and biases
         setWeightsAndBiases(population.get(0));
     }
 
     private List<Chromosome> initializePopulation(int populationSize) {
         List<Chromosome> population = new ArrayList<>();
         for (int i = 0; i < populationSize; i++) {
-            Chromosome chromo = new Chromosome(weights, biases);
-            population.add(chromo);
+            population.add(new Chromosome(weights, biases));
         }
         return population;
     }
@@ -137,42 +152,39 @@ public class NeuralNetworkGA {
         population.sort((a, b) -> Double.compare(b.fitness, a.fitness));
     }
 
-    //roulette wheel selection
     private List<Chromosome> selectNextGeneration(List<Chromosome> population, double mutationRate) {
         List<Chromosome> nextGeneration = new ArrayList<>();
         int eliteCount = (int) (0.1 * population.size()); // Keep top 10%
         nextGeneration.addAll(population.subList(0, eliteCount));
 
-        // Calculate the total fitness of the population
+        // Calculate total fitness
         double totalFitness = population.stream()
-                .mapToDouble(Chromosome::getFitness)
+                .mapToDouble(Chromosome::getFitness) // Using getFitness from Chromosome
                 .sum();
 
-        Random rand = new Random();
-
-        // Method for selecting a parent using roulette wheel selection
-        Chromosome selectParent() {
-            double randomValue = rand.nextDouble() * totalFitness;
-            double cumulativeFitness = 0.0;
-            for (Chromosome chromosome : population) {
-                cumulativeFitness += chromosome.getFitness();
-                if (cumulativeFitness >= randomValue) {
-                    return chromosome;
-                }
-            }
-            return population.get(population.size() - 1); // Fallback, should rarely be needed
-        }
-
-        // Create the rest of the next generation using roulette wheel selection
+        // Fill the rest of the next generation using roulette wheel selection
         while (nextGeneration.size() < population.size()) {
-            Chromosome parent1 = selectParent();
-            Chromosome parent2 = selectParent();
+            Chromosome parent1 = selectParent(population, totalFitness);
+            Chromosome parent2 = selectParent(population, totalFitness);
             Chromosome offspring = parent1.crossover(parent2);
             offspring.mutate(mutationRate);
             nextGeneration.add(offspring);
         }
 
         return nextGeneration;
+    }
+
+    // Helper method to select a parent using roulette wheel selection
+    private Chromosome selectParent(List<Chromosome> population, double totalFitness) {
+        double randomValue = rand.nextDouble() * totalFitness;
+        double cumulativeFitness = 0.0;
+        for (Chromosome chromosome : population) {
+            cumulativeFitness += chromosome.getFitness(); // Using getFitness
+            if (cumulativeFitness >= randomValue) {
+                return chromosome;
+            }
+        }
+        return population.get(population.size() - 1); // Fallback, should rarely be needed
     }
 
 
@@ -189,7 +201,7 @@ public class NeuralNetworkGA {
         this.biases = best.biases;
     }
 
-    // Chromosome class for GA
+    // Nested Chromosome class for the genetic algorithm
     private class Chromosome {
         List<double[][]> weights;
         List<double[]> biases;
@@ -200,21 +212,12 @@ public class NeuralNetworkGA {
             this.biases = cloneBiases(biases);
         }
 
+        double getFitness() {
+            return fitness; // Return the fitness of the chromosome
+        }
+
         double[] forwardPass(double[] input) {
-            double[] currentOutput = input;
-            for (int i = 0; i < weights.size(); i++) {
-                double[] newOutput = new double[weights.get(i)[0].length];
-                for (int j = 0; j < newOutput.length; j++) {
-                    double z = 0.0;
-                    for (int k = 0; k < currentOutput.length; k++) {
-                        z += currentOutput[k] * weights.get(i)[k][j];
-                    }
-                    z += biases.get(i)[j];
-                    newOutput[j] = (i == weights.size() - 1 && activationType.equals("softmax")) ? z : sigmoid(z);
-                }
-                currentOutput = (i == weights.size() - 1 && activationType.equals("softmax")) ? softmax(newOutput) : newOutput;
-            }
-            return currentOutput;
+            return NeuralNetworkGA.this.forwardPass(input); // Reuse existing forwardPass
         }
 
         Chromosome crossover(Chromosome other) {
@@ -222,11 +225,11 @@ public class NeuralNetworkGA {
             for (int i = 0; i < weights.size(); i++) {
                 for (int j = 0; j < weights.get(i).length; j++) {
                     for (int k = 0; k < weights.get(i)[j].length; k++) {
-                        offspring.weights.get(i)[j][k] = (rand.nextBoolean()) ? this.weights.get(i)[j][k] : other.weights.get(i)[j][k];
+                        offspring.weights.get(i)[j][k] = rand.nextBoolean() ? this.weights.get(i)[j][k] : other.weights.get(i)[j][k];
                     }
                 }
                 for (int j = 0; j < biases.get(i).length; j++) {
-                    offspring.biases.get(i)[j] = (rand.nextBoolean()) ? this.biases.get(i)[j] : other.biases.get(i)[j];
+                    offspring.biases.get(i)[j] = rand.nextBoolean() ? this.biases.get(i)[j] : other.biases.get(i)[j];
                 }
             }
             return offspring;
