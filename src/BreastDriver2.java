@@ -117,21 +117,47 @@ public class BreastDriver2 {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {4,2};
+                int[] hiddenLayerSizes = {6,4};
                 int outputSize = 2;
                 String activationType = "softmax";
-                double learningRate = 0.0001;
-                boolean useMomentum = false;
-                double momentumCoefficient = 0.9;
 
-                NeuralNetwork neuralNet = new NeuralNetwork(inputSize, hiddenLayerSizes, outputSize, activationType, learningRate, useMomentum, momentumCoefficient);
-
-                int maxEpochs = 100;
+                /*
+                int populationSize = 50;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
                 double tolerance = 0.0001;
-                neuralNet.train(trainInputs, trainOutputsOHE, tolerance, maxEpochs);
+                int patience = 50;
+                GAC ga = new GAC(populationSize, mutationRate, crossoverRate);
+                ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
+                NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputsOHE, tolerance, patience);
+
+
+                int numParticles = 30;
+                int maxIterations = 100;
+                double inertiaWeight = 0.7;
+                double cognitiveComponent = 1.5;
+                double socialComponent = 1.5;
+                double vMax = 0.1;
+                NeuralNetwork2 nn2 = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
+                PSOC pso = new PSOC(nn2, trainInputs, trainOutputsOHE, numParticles, maxIterations, inertiaWeight, cognitiveComponent, socialComponent, vMax);
+                List <double[][]> weights = pso.optimize();
+                NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
+                nn.setWeights(weights);
+                */
+
+                int populationSize = 100;
+                int maxNoImprovementGenerations = 20; //lower this probably
+                double mutationFactor = 0.5;
+                double crossoverRate = 0.9;
+                double tolerance = 0.0001;
+                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
+
+                NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputsOHE);
+                //remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
+
 
                 for (int t = 0; t < testInputs.length; t++) {
-                    double[] prediction = neuralNet.forwardPass(testInputs[t]);
+                    double[] prediction = nn.forwardPass(testInputs[t]);
                     double actual = scaledTestData.get(t).get(scaledTestData.get(t).size() - 1);
 
                     if (prediction[0] > 0.5)
@@ -153,8 +179,9 @@ public class BreastDriver2 {
                 total01loss += loss01;
                 System.out.printf("Fold %d 0/1 loss: %.4f%n", i+1, loss01);
 
-                double acrFold = neuralNet.getAvConvergenceRate();
+                double acrFold = de.getAverageConvergenceRate();
                 totalACR += acrFold;
+                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

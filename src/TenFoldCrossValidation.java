@@ -124,7 +124,7 @@ public class TenFoldCrossValidation {
         // Create a map to hold instances of each class
         Map<String, List<List<Object>>> classMap = new HashMap<>();
 
-        // Populate the class map with the remaining instances
+        // Populate the class map with the instances of each class
         for (List<Object> row : dataset) {
             String label = row.get(row.size() - 1).toString();
             classMap.putIfAbsent(label, new ArrayList<>());
@@ -137,21 +137,28 @@ public class TenFoldCrossValidation {
             chunks.add(new ArrayList<>());
         }
 
-        // Distribute remaining instances into chunks while maintaining class proportions
-        for (List<List<Object>> classInstances : classMap.values()) {
-            Random random = new Random(123);
-            Collections.shuffle(classInstances, random); // Shuffle instances within each class
+        // Distribute instances into chunks while maintaining class proportions
+        for (Map.Entry<String, List<List<Object>>> entry : classMap.entrySet()) {
+            List<List<Object>> classInstances = entry.getValue();
 
-            // Calculate the chunk size for remaining instances
-            int chunkSize = classInstances.size() / numChunks;
+            // Shuffle instances within each class for randomness
+            Collections.shuffle(classInstances, new Random(123));
 
-            // Distribute the remaining instances into chunks
-            for (int i = 0; i < numChunks; i++) {
-                int start = i * chunkSize;
-                int end = (i == numChunks - 1) ? classInstances.size() : start + chunkSize;
-                chunks.get(i).addAll(classInstances.subList(start, end));
+            // Distribute instances among chunks
+            int currentChunk = 0;
+            for (List<Object> instance : classInstances) {
+                chunks.get(currentChunk).add(instance);
+                currentChunk = (currentChunk + 1) % numChunks;
+            }
+
+            // Handle small classes: Ensure every class contributes to at least one chunk
+            if (classInstances.size() < numChunks) {
+                for (int i = 0; i < classInstances.size(); i++) {
+                    chunks.get(i).add(classInstances.get(i));
+                }
             }
         }
+
         return chunks;
     }
 
@@ -159,7 +166,7 @@ public class TenFoldCrossValidation {
         // Create a map to hold instances of each class
         Map<String, List<List<Object>>> classMap = new HashMap<>();
 
-        // Populate the class map with the remaining instances
+        // Populate the class map with the instances of each class
         for (List<Object> row : dataset) {
             String label = row.get(row.size() - 1).toString();
             classMap.putIfAbsent(label, new ArrayList<>());
@@ -172,21 +179,28 @@ public class TenFoldCrossValidation {
             chunks.add(new ArrayList<>());
         }
 
-        // Distribute remaining instances into chunks while maintaining class proportions
-        for (List<List<Object>> classInstances : classMap.values()) {
-            Random random = new Random(123);
-            Collections.shuffle(classInstances, random); // Shuffle instances within each class
+        // Distribute instances into chunks while maintaining class proportions
+        for (Map.Entry<String, List<List<Object>>> entry : classMap.entrySet()) {
+            List<List<Object>> classInstances = entry.getValue();
 
-            // Calculate the chunk size for remaining instances
-            int chunkSize = classInstances.size() / numChunks;
+            // Shuffle instances within each class for randomness
+            Collections.shuffle(classInstances, new Random(123));
 
-            // Distribute the remaining instances into chunks
-            for (int i = 0; i < numChunks; i++) {
-                int start = i * chunkSize;
-                int end = (i == numChunks - 1) ? classInstances.size() : start + chunkSize;
-                chunks.get(i).addAll(classInstances.subList(start, end));
+            // Distribute instances among chunks
+            int currentChunk = 0;
+            for (List<Object> instance : classInstances) {
+                chunks.get(currentChunk).add(instance);
+                currentChunk = (currentChunk + 1) % numChunks;
+            }
+
+            // Handle small classes: Ensure every class contributes to at least one chunk
+            if (classInstances.size() < numChunks) {
+                for (int i = 0; i < classInstances.size(); i++) {
+                    chunks.get(i).add(classInstances.get(i));
+                }
             }
         }
+
         return chunks;
     }
 }

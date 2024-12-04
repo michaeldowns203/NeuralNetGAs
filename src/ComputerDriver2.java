@@ -77,11 +77,11 @@ public class ComputerDriver2 {
                 }
 
                 double[][] trainInputs = new double[trainingData.size()][];
-                double[][] trainOutputs = new double[trainingLabels.size()][];
+                double[] trainOutputs = new double[trainingLabels.size()];
 
                 for (int t = 0; t < trainingData.size(); t++) {
                     trainInputs[t] = trainingData.get(t).stream().mapToDouble(Double::doubleValue).toArray();
-                    trainOutputs[t] = trainingLabels.get(t).stream().mapToDouble(Double::doubleValue).toArray();
+                    trainOutputs[t] = trainingLabels.get(t).get(0);
                 }
 
                 double[][] testInputs = new double[scaledTestData.size()][];
@@ -91,21 +91,46 @@ public class ComputerDriver2 {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {2,1};
+                int[] hiddenLayerSizes = {6,4};
                 int outputSize = 1;
                 String activationType = "linear";
-                double learningRate = 0.01;
-                boolean useMomentum = false;
-                double momentumCoefficient = 0.9;
 
-                NeuralNetwork neuralNet = new NeuralNetwork(inputSize, hiddenLayerSizes, outputSize, activationType, learningRate, useMomentum, momentumCoefficient);
 
-                int maxEpochs = 1000;
+                int populationSize = 50;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
                 double tolerance = 0.0001;
-                neuralNet.train(trainInputs, trainOutputs, tolerance, maxEpochs);
+                int patience = 50;
+                GA ga = new GA(populationSize, mutationRate, crossoverRate);
+                ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
+                NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
+
+                /*
+                int numParticles = 30;
+                int maxIterations = 100;
+                double inertiaWeight = 0.7;
+                double cognitiveComponent = 1.5;
+                double socialComponent = 1.5;
+                double vMax = 0.1;
+                NeuralNetwork2 nn2 = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
+                PSO pso = new PSO(nn2, trainInputs, trainOutputs, numParticles, maxIterations, inertiaWeight, cognitiveComponent, socialComponent, vMax);
+                List <double[][]> weights = pso.optimize();
+                NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
+                nn.setWeights(weights);
+
+
+                int populationSize = 100;
+                int maxNoImprovementGenerations = 50;
+                double mutationFactor = 0.5;
+                double crossoverRate = 0.9;
+                double tolerance = 0.0001;
+                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
+
+                NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
+                */
 
                 for (int t = 0; t < testInputs.length; t++) {
-                    double[] prediction = neuralNet.forwardPass(testInputs[t]);
+                    double[] prediction = nn.forwardPass(testInputs[t]);
                     double actual = scaledTestData.get(t).get(scaledTestData.get(t).size() - 1);
 
                     predictedList.add(prediction[0]);
@@ -118,8 +143,9 @@ public class ComputerDriver2 {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = neuralNet.getAvConvergenceRate();
+                double acrFold = ga.getAverageConvergenceRate();
                 totalACR += acrFold;
+                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
