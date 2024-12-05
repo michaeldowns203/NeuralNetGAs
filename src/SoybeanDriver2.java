@@ -120,11 +120,22 @@ public class SoybeanDriver2 {
                 int outputSize = 4;
                 String activationType = "softmax";
 
-                int numParticles = 30;
-                int maxIterations = 100;
-                double inertiaWeight = 0.7;
-                double cognitiveComponent = 1.5;
-                double socialComponent = 1.5;
+                /*
+                int populationSize = 50;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
+                double tolerance = 0.0001;
+                int patience = 50;
+                GAC ga = new GAC(populationSize, mutationRate, crossoverRate);
+                ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
+                NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputsOHE, tolerance, patience);
+                */
+
+                int numParticles = 100;
+                int maxIterations = 200;
+                double inertiaWeight = 1.0;
+                double cognitiveComponent = 2.5;
+                double socialComponent = 2.0;
                 double vMax = 0.1;
                 NeuralNetwork2 nn2 = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 PSOC pso = new PSOC(nn2, trainInputs, trainOutputsOHE, numParticles, maxIterations, inertiaWeight, cognitiveComponent, socialComponent, vMax);
@@ -134,13 +145,15 @@ public class SoybeanDriver2 {
 
                 /*
                 int populationSize = 100;
-                int maxGenerations = 200;
+                int maxNoImprovementGenerations = 20; //lower this probably
                 double mutationFactor = 0.5;
                 double crossoverRate = 0.9;
-                DE de = new DE(populationSize, maxGenerations, mutationFactor, crossoverRate);
+                double tolerance = 0.0001;
+                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputsOHE);
-                */
+                //remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
+                 */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -190,8 +203,9 @@ public class SoybeanDriver2 {
                 total01loss += loss01;
                 System.out.printf("Fold %d 0/1 loss: %.4f%n", i+1, loss01);
 
-                double acrFold = nn.getAvConvergenceRate();
-                totalACR += acrFold;
+                //double acrFold = de.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

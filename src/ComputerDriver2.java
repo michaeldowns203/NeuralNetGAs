@@ -95,17 +95,17 @@ public class ComputerDriver2 {
                 int outputSize = 1;
                 String activationType = "linear";
 
-
+                /*
                 int populationSize = 50;
                 double mutationRate = 0.05;
                 double crossoverRate = 0.9;
                 double tolerance = 0.0001;
-                int patience = 50;
+                int patience = 20;
                 GA ga = new GA(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
+                */
 
-                /*
                 int numParticles = 30;
                 int maxIterations = 100;
                 double inertiaWeight = 0.7;
@@ -118,11 +118,11 @@ public class ComputerDriver2 {
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
 
-
+                /*
                 int populationSize = 100;
-                int maxNoImprovementGenerations = 50;
                 double mutationFactor = 0.5;
                 double crossoverRate = 0.9;
+                int maxNoImprovementGenerations = 50;
                 double tolerance = 0.0001;
                 DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
 
@@ -143,9 +143,9 @@ public class ComputerDriver2 {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = ga.getAverageConvergenceRate();
-                totalACR += acrFold;
-                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                //double acrFold = ga.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

@@ -120,6 +120,17 @@ public class AbaloneDriver2 {
                 int outputSize = 1;
                 String activationType = "linear";
 
+                /*
+                int populationSize = 50;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
+                double tolerance = 0.0001;
+                int patience = 20;
+                GA ga = new GA(populationSize, mutationRate, crossoverRate);
+                ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
+                NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
+                */
+
                 int numParticles = 30;
                 int maxIterations = 100;
                 double inertiaWeight = 0.7;
@@ -134,10 +145,11 @@ public class AbaloneDriver2 {
 
                 /*
                 int populationSize = 100;
-                int maxGenerations = 200;
                 double mutationFactor = 0.5;
                 double crossoverRate = 0.9;
-                DE de = new DE(populationSize, maxGenerations, mutationFactor, crossoverRate);
+                int maxNoImprovementGenerations = 50;
+                double tolerance = 0.0001;
+                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
                 */
@@ -156,8 +168,9 @@ public class AbaloneDriver2 {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = nn.getAvConvergenceRate();
-                totalACR += acrFold;
+                //double acrFold = ga.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

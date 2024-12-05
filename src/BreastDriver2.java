@@ -130,21 +130,21 @@ public class BreastDriver2 {
                 GAC ga = new GAC(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputsOHE, tolerance, patience);
+                */
 
-
-                int numParticles = 30;
-                int maxIterations = 100;
-                double inertiaWeight = 0.7;
-                double cognitiveComponent = 1.5;
-                double socialComponent = 1.5;
+                int numParticles = 100;
+                int maxIterations = 200;
+                double inertiaWeight = 1.0;
+                double cognitiveComponent = 2.5;
+                double socialComponent = 2.0;
                 double vMax = 0.1;
                 NeuralNetwork2 nn2 = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 PSOC pso = new PSOC(nn2, trainInputs, trainOutputsOHE, numParticles, maxIterations, inertiaWeight, cognitiveComponent, socialComponent, vMax);
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
-                */
 
+                /*
                 int populationSize = 100;
                 int maxNoImprovementGenerations = 20; //lower this probably
                 double mutationFactor = 0.5;
@@ -154,6 +154,7 @@ public class BreastDriver2 {
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputsOHE);
                 //remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
+                 */
 
 
                 for (int t = 0; t < testInputs.length; t++) {
@@ -179,9 +180,9 @@ public class BreastDriver2 {
                 total01loss += loss01;
                 System.out.printf("Fold %d 0/1 loss: %.4f%n", i+1, loss01);
 
-                double acrFold = de.getAverageConvergenceRate();
-                totalACR += acrFold;
-                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                //double acrFold = de.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
