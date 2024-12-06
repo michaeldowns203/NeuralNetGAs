@@ -1,8 +1,9 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class DE {
+public class DEPrint {
     private int populationSize;
     private int maxNoImprovementGenerations;
     private double scalingFactor;
@@ -13,7 +14,7 @@ public class DE {
     private double[] bestFitness;
     private Random random;
 
-    public DE(int populationSize, int maxNoImprovementGenerations, double scalingFactor, double crossoverProb, double tolerance) {
+    public DEPrint(int populationSize, int maxNoImprovementGenerations, double scalingFactor, double crossoverProb, double tolerance) {
         this.populationSize = populationSize;
         this.maxNoImprovementGenerations = maxNoImprovementGenerations;
         this.scalingFactor = scalingFactor;
@@ -127,7 +128,9 @@ public class DE {
             c = random.nextInt(populationSize);
         } while (c == targetIndex || c == a || c == b);
 
-        // Mutation and Crossover
+        System.out.println("Mutation - Target Index: " + targetIndex + ", Indices used for mutation: a=" + a + ", b=" + b + ", c=" + c);
+
+        // Mutation
         List<double[][]> x_a = population[a].getWeights();
         List<double[][]> x_b = population[b].getWeights();
         List<double[][]> x_c = population[c].getWeights();
@@ -148,6 +151,12 @@ public class DE {
             v.add(mutatedLayer);
         }
 
+        System.out.println("Mutation completed. Mutated weights: ");
+        for (double[][] layer : v) {
+            System.out.println(Arrays.deepToString(layer));
+        }
+
+        // Crossover
         List<double[][]> x_target = population[targetIndex].getWeights();
         List<double[][]> u = new ArrayList<>();
 
@@ -168,10 +177,16 @@ public class DE {
             u.add(crossoverLayer);
         }
 
+        System.out.println("Crossover completed. Trial weights after crossover: ");
+        for (double[][] layer : u) {
+            System.out.println(Arrays.deepToString(layer));
+        }
+
         NeuralNetwork2 trial = population[targetIndex].copy();
         trial.setWeights(u);
         return trial;
     }
+
 
     private double evaluate(NeuralNetwork2 nn, double[][] input, double[] target) {
         double error = 0.0;

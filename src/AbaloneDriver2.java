@@ -145,11 +145,11 @@ public class AbaloneDriver2 {
 
                 /*
                 int populationSize = 100;
-                double mutationFactor = 0.5;
-                double crossoverRate = 0.9;
+                double scalingFactor = 0.5;
+                double crossoverProb = 0.9;
                 int maxNoImprovementGenerations = 50;
                 double tolerance = 0.0001;
-                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
+                DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
                 */

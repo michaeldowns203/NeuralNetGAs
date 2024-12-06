@@ -122,6 +122,17 @@ public class AbaloneDriver {
                 int outputSize = 1;
                 String activationType = "linear";
 
+                /*
+                int populationSize = 50;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
+                double tolerance = 0.0001;
+                int patience = 50;
+                GA ga = new GA(populationSize, mutationRate, crossoverRate);
+                ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
+                NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
+
+
                 int numParticles = 30;
                 int maxIterations = 100;
                 double inertiaWeight = 0.7;
@@ -133,16 +144,16 @@ public class AbaloneDriver {
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
+                */
 
-                /*
                 int populationSize = 100;
-                int maxGenerations = 200;
-                double mutationFactor = 0.5;
-                double crossoverRate = 0.9;
-                DE de = new DE(populationSize, maxGenerations, mutationFactor, crossoverRate);
+                double scalingFactor = 0.5;
+                double crossoverProb = 0.9;
+                int maxNoImprovementGenerations = 50;
+                double tolerance = 0.0001;
+                DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
-                */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -158,7 +169,7 @@ public class AbaloneDriver {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = nn.getAvConvergenceRate();
+                double acrFold = de.getAverageConvergenceRate();
                 totalACR += acrFold;
             }
 

@@ -144,13 +144,13 @@ public class GlassDriver2 {
                 /*
                 int populationSize = 100;
                 int maxNoImprovementGenerations = 20; //lower this probably
-                double mutationFactor = 0.5;
-                double crossoverRate = 0.9;
+                double scalingFactor = 0.5;
+                double crossoverProb = 0.9;
                 double tolerance = 0.0001;
-                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
+                DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputsOHE);
-                //remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
+                // Remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
                  */
 
                 for (int t = 0; t < testInputs.length; t++) {

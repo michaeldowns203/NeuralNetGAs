@@ -98,13 +98,13 @@ public class GAC {
 
     // Perform roulette wheel selection
     private NeuralNetwork2 selectParent() {
-        double totalFitness = fitness.stream().mapToDouble(Double::doubleValue).sum();
+        double totalFitness = fitness.stream().mapToDouble(f -> 1.0 / f).sum();
         double randomValue = random.nextDouble() * totalFitness;
         double cumulativeFitness = 0.0;
 
         for (int i = 0; i < population.size(); i++) {
-            cumulativeFitness += fitness.get(i);
-            if (cumulativeFitness >= randomValue) {
+            cumulativeFitness += 1 / fitness.get(i);
+            if (cumulativeFitness <= randomValue) {
                 return population.get(i);
             }
         }
@@ -135,7 +135,6 @@ public class GAC {
 
     public NeuralNetwork2 run(int inputSize, int[] hiddenLayerSizes, int outputSize, String activationType, double[][] input,
                               double[][] target, double convergenceThreshold, int patience) {
-        initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
 
         double previousBestFitness = Double.NEGATIVE_INFINITY;
         int stableGenerations = 0;
@@ -160,13 +159,11 @@ public class GAC {
             }
             previousBestFitness = bestFitness;
 
-            // Create new population with elitism
+            // Create new population
             List<NeuralNetwork2> newPopulation = new ArrayList<>();
-            List<Double> newFitness = new ArrayList<>();
 
             // Add the best individual to the new population (elitism)
             newPopulation.add(bestIndividual);
-            newFitness.add(fitness.get(bestIndex));
 
             for (int i = 1; i < populationSize / 2; i++) {
                 NeuralNetwork2 parent1 = selectParent();
@@ -188,15 +185,11 @@ public class GAC {
                 chromosomeToNetwork(child2Chromosome, child2);
 
                 newPopulation.add(child1);
-                newFitness.add(0.0);
                 newPopulation.add(child2);
-                newFitness.add(0.0);
             }
 
-            // Update population and fitness
+            // Update population
             population = newPopulation;
-            fitness = newFitness;
-            evaluateFitness(input, target);
 
             generation++;
         }

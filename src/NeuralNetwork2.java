@@ -31,7 +31,7 @@ public class NeuralNetwork2 {
             weights.add(new double[inputSize][outputSize]);
             biases.add(new double[outputSize]);
         } else {
-            // Same as before: Input to first hidden layer, hidden layers, and output
+            // Input to first hidden layer, hidden layers, and output
             weights.add(new double[inputSize][hiddenLayerSizes[0]]);
             biases.add(new double[hiddenLayerSizes[0]]);
 
@@ -175,7 +175,7 @@ public class NeuralNetwork2 {
         return finalOutput;
     }
 
-    // This will store the input layer values when the network starts processing
+    // Stores the input layer values when the network starts processing
     private double[] inputLayer;
 
     // Store the output of each layer after forward pass
@@ -202,78 +202,6 @@ public class NeuralNetwork2 {
             layerOutputs.set(layerIdx, output);  // Update output if it already exists
         } else {
             layerOutputs.add(output);  // Add new output if it doesn't exist
-        }
-    }
-
-    public void train(double[][] inputData, double[][] targetData, double tolerance, int maxEpochs) {
-        List<Double> lossHistory = new ArrayList<>();
-        double previousLoss = Double.MAX_VALUE;
-        int epoch = 0;
-
-        while (epoch < maxEpochs) {
-            double totalLoss = 0.0;
-
-            for (int i = 0; i < inputData.length; i++) {
-                double[] input = inputData[i];
-                double[] target = targetData[i];
-
-                double[] predictedOutput = forwardPass(input);
-
-                // Calculate loss for the current instance (mean squared error)
-                for (int j = 0; j < target.length; j++) {
-                    totalLoss += Math.pow(target[j] - predictedOutput[j], 2);
-                }
-            }
-
-            // Calculate average loss for the epoch
-            totalLoss /= inputData.length;
-            lossHistory.add(totalLoss);
-
-            // Check for convergence
-            if (Math.abs(previousLoss - totalLoss) < tolerance) {
-                System.out.println("Convergence reached at epoch " + epoch + " with loss = " + totalLoss);
-                break;
-            }
-
-            previousLoss = totalLoss;
-            epoch++;
-        }
-
-        // Print convergence rate at the end of training
-        printConvergenceRate(lossHistory);
-
-        if (epoch == maxEpochs) {
-            System.out.println("Max epochs reached without full convergence.");
-        }
-    }
-
-    private double avConvergenceRate = 0;
-
-    public double getAvConvergenceRate() {
-        return avConvergenceRate;
-    }
-
-    public void printConvergenceRate(List<Double> lossHistory) {
-        double totalRate = 0.0;
-        int count = 0;
-
-        for (int i = 1; i < lossHistory.size(); i++) {
-            double previousLoss = lossHistory.get(i - 1);
-            double currentLoss = lossHistory.get(i);
-
-            double rate = Math.abs((previousLoss - currentLoss) / previousLoss);
-
-            totalRate += rate;
-            count++;
-        }
-
-        // Calculate and print the average convergence rate
-        if (count > 0) {
-            double averageRate = totalRate / count;
-            System.out.printf("Average Convergence Rate: %.6f\n", averageRate);
-            avConvergenceRate = averageRate;
-        } else {
-            System.out.println("Average Convergence Rate: Undefined (no valid epochs to calculate)");
         }
     }
 

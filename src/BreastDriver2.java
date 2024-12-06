@@ -122,9 +122,9 @@ public class BreastDriver2 {
                 String activationType = "softmax";
 
 
-                int populationSize = 50;
-                double mutationRate = 0.05;
-                double crossoverRate = 0.9;
+                int populationSize = 100;
+                double mutationRate = 0.01;
+                double crossoverRate = 0.7;
                 double tolerance = 0.0001;
                 int patience = 50;
                 GAC ga = new GAC(populationSize, mutationRate, crossoverRate);
@@ -145,15 +145,15 @@ public class BreastDriver2 {
                 nn.setWeights(weights);
 
 
-                int populationSize = 100;
-                int maxNoImprovementGenerations = 50; //lower this probably
-                double mutationFactor = 0.5;
-                double crossoverRate = 0.9;
+                int populationSize = 50;
+                int maxNoImprovementGenerations = 50;
+                double scalingFactor = 0.3;
+                double crossoverProb = 0.7;
                 double tolerance = 0.0001;
-                DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
+                DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputsOHE);
-                //remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
+                // Remember to change values in de algorithm (hidden layer sizes, softmax, num outputs)
                  */
 
 
@@ -180,9 +180,9 @@ public class BreastDriver2 {
                 total01loss += loss01;
                 System.out.printf("Fold %d 0/1 loss: %.4f%n", i+1, loss01);
 
-                //double acrFold = de.getAverageConvergenceRate();
-                //totalACR += acrFold;
-                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                double acrFold = ga.getAverageConvergenceRate();
+                totalACR += acrFold;
+                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

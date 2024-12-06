@@ -1,10 +1,7 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.IntStream;
 
-public class GA {
+public class GAPrint {
     private List<NeuralNetwork2> population;
     private List<Double> fitness; // Store fitness values for each individual
     private final int populationSize;
@@ -13,7 +10,7 @@ public class GA {
     private final Random random;
     private List<Double> fitnessHistory;
 
-    public GA(int populationSize, double mutationRate, double crossoverRate) {
+    public GAPrint(int populationSize, double mutationRate, double crossoverRate) {
         this.populationSize = populationSize;
         this.mutationRate = mutationRate;
         this.crossoverRate = crossoverRate;
@@ -25,10 +22,13 @@ public class GA {
 
     // Initialize population with random individuals
     public void initializePopulation(int inputSize, int[] hiddenLayerSizes, int outputSize, String activationType) {
+        System.out.println("Fitness size before initialization: " + fitness.size());
+        System.out.println("Population size before initialization: " + population.size());
         for (int i = 0; i < populationSize; i++) {
             NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
             population.add(nn);
             fitness.add(0.0); // Initialize fitness to 0
+            System.out.println("Fitness size during initialization: " + fitness.size());
         }
     }
 
@@ -75,35 +75,53 @@ public class GA {
 
         for (int i = 0; i < population.size(); i++) {
             cumulativeFitness += 1 / fitness.get(i);
+            System.out.println("Cumulative Fitness: " + cumulativeFitness);
+            System.out.println("Random Value: "+ randomValue);
             if (cumulativeFitness <= randomValue) {
+                System.out.println("Selected Parent at index: " + i + " with fitness: " + fitness.get(i));
                 return population.get(i);
             }
         }
+        System.out.println("Selected Parent at fallback index (last): " + (population.size() - 1));
         return population.get(population.size() - 1); // Fallback
     }
+
 
     // Perform uniform crossover
     private double[] crossover(double[] parent1, double[] parent2) {
         double[] child = new double[parent1.length];
+        System.out.println("Performing Crossover:");
+        System.out.println("Parent 1: " + Arrays.toString(parent1));
+        System.out.println("Parent 2: " + Arrays.toString(parent2));
+
         for (int i = 0; i < parent1.length; i++) {
-            // Use crossover rate to determine if crossover occurs
             if (random.nextDouble() < crossoverRate) {
                 child[i] = parent1[i];
             } else {
                 child[i] = parent2[i];
             }
         }
+
+        System.out.println("Child (after crossover): " + Arrays.toString(child));
         return child;
     }
 
     // Perform mutation
     private void mutate(double[] chromosome) {
+        System.out.println("Performing Mutation:");
+        System.out.println("Original Chromosome: " + Arrays.toString(chromosome));
+
         for (int i = 0; i < chromosome.length; i++) {
             if (random.nextDouble() < mutationRate) {
+                double originalValue = chromosome[i];
                 chromosome[i] += random.nextGaussian() * 0.1; // Small mutation
+                System.out.println("Mutated Gene at index " + i + ": " + originalValue + " -> " + chromosome[i]);
             }
         }
+
+        System.out.println("Chromosome (after mutation): " + Arrays.toString(chromosome));
     }
+
 
 
     private void evaluateFitness(double[][] input, double[] target) {
@@ -181,6 +199,7 @@ public class GA {
 
             // Update population
             population = newPopulation;
+            fitness = new ArrayList<>(Collections.nCopies(population.size(), 0.0));
 
             generation++;
         }

@@ -157,25 +157,4 @@ public class PSO {
         }
         return -error / input.length; // - Mean squared error
     }
-
-    private double evaluate(NeuralNetwork2 nn, double[][] input, double[][] target) {
-        double totalLoss = 0.0;
-
-        for (int i = 0; i < input.length; i++) {
-            double[] predicted = nn.forwardPass(input[i]); // Predicted probabilities
-            double[] actual = target[i]; // Actual one-hot encoded target
-
-            for (int j = 0; j < predicted.length; j++) {
-                // Avoid log(0) by adding a small constant epsilon
-                double epsilon = 1e-15;
-                double predictedClamped = Math.max(epsilon, Math.min(1 - epsilon, predicted[j]));
-
-                // Cross-entropy contribution for this output
-                totalLoss -= actual[j] * Math.log(predictedClamped);
-            }
-        }
-
-        // Return the negative average cross-entropy loss
-        return -totalLoss / input.length;
-    }
 }

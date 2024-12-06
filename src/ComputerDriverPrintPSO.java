@@ -1,75 +1,54 @@
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
+import java.io.*;
 
 //test model - normal 10 fold
-public class SoybeanDriverPrint {
+public class ComputerDriverPrintPSO {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/soybean-small.data";
+        String inputFile1 = "src/machine.data";
         try {
             FileInputStream fis = new FileInputStream(inputFile1);
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader stdin = new BufferedReader(isr);
 
-            // First, count the number of lines to determine the size of the lists
             int lineCount = 0;
             while (stdin.readLine() != null) {
                 lineCount++;
             }
-            // Reset the reader to the beginning of the file
+
             stdin.close();
             fis = new FileInputStream(inputFile1);
             isr = new InputStreamReader(fis);
             stdin = new BufferedReader(isr);
 
-            // Initialize the lists
             List<List<Object>> dataset = new ArrayList<>();
-            List<Object> labels = new ArrayList<>();
-
             String line;
-            int lineNum = 0;
 
-            // Read the file and fill the dataset
             while ((line = stdin.readLine()) != null) {
                 String[] rawData = line.split(",");
                 List<Object> row = new ArrayList<>();
-
-                // Assign the label (last column)
-                String label = rawData[35];
-                String numLabel = label.replaceAll("[^0-9.]", "");
-                labels.add(Double.parseDouble(numLabel));
-
-                // Fill the data rows
-                for (int i = 0; i < rawData.length - 1; i++) {
+                for (int i = 2; i <= 8; i++) {
                     row.add(Double.parseDouble(rawData[i]));
                 }
-                row.add(labels.get(lineNum)); // Add the label to the row
                 dataset.add(row);
-                lineNum++;
             }
 
             stdin.close();
 
-            // Split the remaining dataset into stratified chunks
-            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksC(dataset, 10);
+            //List<List<Object>> testSet = extractTenPercent(dataset);
+            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksR(dataset, 10);
 
-            // Loss instance variables
-            double total01loss = 0;
+            double totalMSE = 0;
             double totalACR = 0;
 
             for (int i = 0; i < 10; i++) {
                 List<List<Object>> trainingSet = new ArrayList<>();
                 List<List<Double>> trainingData = new ArrayList<>();
                 List<List<Double>> trainingLabels = new ArrayList<>();
-                List<Integer> predictedList = new ArrayList<>();
-                List<Integer> actualList = new ArrayList<>();
+                List<Double> predictedList = new ArrayList<>();
+                List<Double> actualList = new ArrayList<>();
 
                 List<List<Object>> testSet = chunks.get(i);
-
-                int correctPredictions = 0;
 
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
@@ -99,14 +78,12 @@ public class SoybeanDriverPrint {
                 }
 
                 double[][] trainInputs = new double[trainingData.size()][];
-                double[][] trainOutputs = new double[trainingLabels.size()][];
+                double[] trainOutputs = new double[trainingLabels.size()];
 
                 for (int t = 0; t < trainingData.size(); t++) {
                     trainInputs[t] = trainingData.get(t).stream().mapToDouble(Double::doubleValue).toArray();
-                    trainOutputs[t] = trainingLabels.get(t).stream().mapToDouble(Double::doubleValue).toArray();
+                    trainOutputs[t] = trainingLabels.get(t).get(0);
                 }
-
-                double[][] trainOutputsOHE = OneHotEncoder.oneHotEncode(trainOutputs);
 
                 double[][] testInputs = new double[scaledTestData.size()][];
                 for (int t = 0; t < scaledTestData.size(); t++) {
@@ -115,89 +92,68 @@ public class SoybeanDriverPrint {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {33,15};
-                int outputSize = 4;
-                String activationType = "softmax";
+                int[] hiddenLayerSizes = {4,2};
+                int outputSize = 1;
+                String activationType = "linear";
 
-                int numParticles = 30;
-                int maxIterations = 100;
+                /*
+                int populationSize = 50;
+                double mutationRate = 0.1;
+                double crossoverRate = 0.8;
+                double tolerance = 0.0001;
+                int patience = 50;
+                GAPrint ga = new GAPrint(populationSize, mutationRate, crossoverRate);
+                ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
+                NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
+                */
+
+                int numParticles = 100;
+                int maxIterations = 50;
                 double inertiaWeight = 0.7;
                 double cognitiveComponent = 1.5;
                 double socialComponent = 1.5;
                 double vMax = 0.1;
                 NeuralNetwork2 nn2 = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
-                PSOC pso = new PSOC(nn2, trainInputs, trainOutputsOHE, numParticles, maxIterations, inertiaWeight, cognitiveComponent, socialComponent, vMax);
+                PSOPrint pso = new PSOPrint(nn2, trainInputs, trainOutputs, numParticles, maxIterations, inertiaWeight, cognitiveComponent, socialComponent, vMax);
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
 
                 /*
-                int populationSize = 100;
-                int maxGenerations = 200;
-                double mutationFactor = 0.5;
-                double crossoverRate = 0.9;
-                DE de = new DE(populationSize, maxGenerations, mutationFactor, crossoverRate);
+                int populationSize = 50;
+                double scalingFactor = 0.5;
+                double crossoverProb = 0.7;
+                int maxNoImprovementGenerations = 50;
+                double tolerance = 0.0001;
+                DEPrint de = new DEPrint(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
-                NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputsOHE);
+                NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
                 */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
                     double actual = scaledTestData.get(t).get(scaledTestData.get(t).size() - 1);
-                    int actualClass = 0;
 
-                    if (actual == 0.0)
-                        actualClass = 1;
-                    else if (actual < 0.4)
-                        actualClass = 2;
-                    else if (actual < 0.8)
-                        actualClass = 3;
-                    else
-                        actualClass = 4;
+                    predictedList.add(prediction[0]);
+                    actualList.add(actual);
 
-                    double maxProb = prediction[0];
-                    int maxIndex = 0;
-
-                    for (int g = 1; g < prediction.length; g++) {
-                        if (prediction[g] > maxProb) {
-                            maxProb = prediction[g];
-                            maxIndex = g;
-                        }
-                    }
-
-                    if (maxIndex == 0)
-                        predictedList.add(1);
-                    else if (maxIndex == 1)
-                        predictedList.add(2);
-                    else if (maxIndex == 2)
-                        predictedList.add(3);
-                    else
-                        predictedList.add(4);
-
-                    actualList.add(actualClass);
-
-                    System.out.printf("Test Instance: %s | Predicted: %d | Actual: %d%n",
-                            Arrays.toString(testInputs[t]), predictedList.get(t), actualClass);
-
-
-                    if (predictedList.get(t).equals(actualClass)) {
-                        correctPredictions++;
-                    }
+                    System.out.printf("Test Instance: %s | Predicted: %.4f | Actual: %.4f%n",
+                            Arrays.toString(testInputs[t]), prediction[0], actual);
                 }
-                // Calculate 0/1 loss
-                double loss01 = 1.0 - (double) correctPredictions / testSet.size();
-                total01loss += loss01;
-                System.out.printf("Fold %d 0/1 loss: %.4f%n", i+1, loss01);
+                double mse = LossFunctions.calculateMSE(actualList, predictedList);
+                totalMSE += mse;
+                System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = nn.getAvConvergenceRate();
-                totalACR += acrFold;
+                //double acrFold = ga.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
             System.out.printf("Average Convergence Rate across all epochs across 10 folds: %.4f%n", AACR);
 
-            double average01loss = total01loss / 10;
-            System.out.printf("Average 0/1 Loss: %.4f%n", average01loss);
+            double averageMSE = totalMSE / 10;
+            System.out.printf("Average Mean Squared Error across 10 folds: %.4f%n", averageMSE);
         }
         catch (IOException e) {
             e.printStackTrace();

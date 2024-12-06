@@ -193,7 +193,7 @@ public class TenFoldCrossValidation {
                 currentChunk = (currentChunk + 1) % numChunks;
             }
 
-            // Handle small classes: Ensure every class contributes to at least one chunk
+            // Handle small classes: ensure every class contributes to at least one chunk
             if (classInstances.size() < numChunks) {
                 for (int i = 0; i < classInstances.size(); i++) {
                     chunks.get(i).add(classInstances.get(i));

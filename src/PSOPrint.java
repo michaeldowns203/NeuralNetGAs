@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class PSOC {
+public class PSOPrint {
     private class Particle {
         List<double[][]> position; // Current weights
         List<double[][]> velocity;
@@ -36,12 +36,12 @@ public class PSOC {
 
     private final NeuralNetwork2 neuralNetwork;
     private final double[][] inputs;
-    private final double[][] outputs; // One-hot encoded targets
+    private final double[] outputs;
     private Particle[] particles;
     private List<double[][]> globalBestPosition;
     private double globalBestFitness;
 
-    public PSOC(NeuralNetwork2 neuralNetwork, double[][] inputs, double[][] outputs,
+    public PSOPrint(NeuralNetwork2 neuralNetwork, double[][] inputs, double[] outputs,
                int numParticles, int maxIterations,
                double inertiaWeight, double cognitiveComponent, double socialComponent, double vMax) {
         this.neuralNetwork = neuralNetwork;
@@ -70,6 +70,8 @@ public class PSOC {
 
         // Optimization loop
         for (int iteration = 0; iteration < maxIterations; iteration++) {
+            System.out.printf("Iteration %d:%n", iteration);
+
             for (Particle particle : particles) {
                 // Set weights in neural network and evaluate fitness
                 neuralNetwork.setWeights(particle.position);
@@ -79,12 +81,14 @@ public class PSOC {
                 if (fitness > particle.bestFitness) {
                     particle.bestFitness = fitness;
                     particle.bestPosition = copyWeightList(particle.position);
+                    System.out.printf("  Updated personal best: Fitness = %.6f%n", fitness);
                 }
 
                 // Update global best
                 if (fitness > globalBestFitness) {
                     globalBestFitness = fitness;
                     globalBestPosition = copyWeightList(particle.position);
+                    System.out.printf("  Updated global best: Fitness = %.6f%n", fitness);
                 }
             }
 
@@ -102,6 +106,7 @@ public class PSOC {
                             double r2 = random.nextDouble();
 
                             // Update velocity
+                            double oldVelocity = velLayer[i][j];
                             velLayer[i][j] = inertiaWeight * velLayer[i][j]
                                     + cognitiveComponent * r1 * (bestLayer[i][j] - posLayer[i][j])
                                     + socialComponent * r2 * (globalBestLayer[i][j] - posLayer[i][j]);
@@ -110,13 +115,19 @@ public class PSOC {
                             velLayer[i][j] = Math.max(-vMax, Math.min(velLayer[i][j], vMax));
 
                             // Update position
+                            double oldPosition = posLayer[i][j];
                             posLayer[i][j] += velLayer[i][j];
+
+                            // Print velocity and position updates
+                            System.out.printf("    Layer %d, Neuron (%d,%d): Velocity updated from %.6f to %.6f, Position updated from %.6f to %.6f%n",
+                                    layer, i, j, oldVelocity, velLayer[i][j], oldPosition, posLayer[i][j]);
                         }
                     }
+
                 }
             }
 
-            System.out.printf("Iteration %d: Best Fitness = %.6f%n", iteration, globalBestFitness);
+            System.out.printf("Iteration %d: Best Fitness = %.6f%n%n", iteration, globalBestFitness);
         }
 
         return globalBestPosition;
@@ -135,7 +146,7 @@ public class PSOC {
         return copy;
     }
 
-    // Helper to create a zero-initialized List<double[][]> with the same structure
+    // Helper to create a zero-initialized List<double[][]> with the same structure as another
     private List<double[][]> createZeroWeightList(List<double[][]> structure) {
         List<double[][]> zeroList = new ArrayList<>();
         for (double[][] layer : structure) {
@@ -148,25 +159,12 @@ public class PSOC {
         return zeroList;
     }
 
-    // Negative Cross-Entropy Loss Evaluation
-    private double evaluate(NeuralNetwork2 nn, double[][] input, double[][] target) {
-        double totalLoss = 0.0;
-
+    private double evaluate(NeuralNetwork2 nn, double[][] input, double[] target) {
+        double error = 0.0;
         for (int i = 0; i < input.length; i++) {
-            double[] predicted = nn.forwardPass(input[i]); // Predicted probabilities
-            double[] actual = target[i]; // Actual one-hot encoded target
-
-            for (int j = 0; j < predicted.length; j++) {
-                // Avoid log(0) by adding a small constant epsilon
-                double epsilon = 1e-15;
-                double predictedClamped = Math.max(epsilon, Math.min(1 - epsilon, predicted[j]));
-
-                // Cross-entropy contribution for this output
-                totalLoss -= actual[j] * Math.log(predictedClamped);
-            }
+            double predicted = nn.forwardPass(input[i])[0]; // Assuming single output
+            error += Math.pow(predicted - target[i], 2);
         }
-
-        // Return the negative average cross-entropy loss
-        return -totalLoss / input.length;
+        return -error / input.length; // - Mean squared error
     }
 }
