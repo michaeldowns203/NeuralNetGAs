@@ -13,7 +13,7 @@ public class PSO {
             position = copyWeightList(initialWeights);
             velocity = createZeroWeightList(initialWeights);
             bestPosition = copyWeightList(position);
-            bestFitness = Double.POSITIVE_INFINITY; // Higher is worse for a minimization problem
+            bestFitness = -Double.MAX_VALUE;
 
             // Randomize velocity
             for (int layer = 0; layer < velocity.size(); layer++) {
@@ -59,7 +59,7 @@ public class PSO {
         List<double[][]> initialWeights = neuralNetwork.getWeights();
         particles = new Particle[numParticles];
         globalBestPosition = copyWeightList(initialWeights);
-        globalBestFitness = Double.POSITIVE_INFINITY;
+        globalBestFitness = -Double.MAX_VALUE;
 
         Random random = new Random();
 
@@ -76,13 +76,13 @@ public class PSO {
                 double fitness = evaluate(neuralNetwork, inputs, outputs);
 
                 // Update personal best
-                if (fitness < particle.bestFitness) {
+                if (fitness > particle.bestFitness) {
                     particle.bestFitness = fitness;
                     particle.bestPosition = copyWeightList(particle.position);
                 }
 
                 // Update global best
-                if (fitness < globalBestFitness) {
+                if (fitness > globalBestFitness) {
                     globalBestFitness = fitness;
                     globalBestPosition = copyWeightList(particle.position);
                 }
@@ -155,7 +155,7 @@ public class PSO {
             double predicted = nn.forwardPass(input[i])[0]; // Assuming single output
             error += Math.pow(predicted - target[i], 2);
         }
-        return error / input.length; // Mean squared error
+        return -error / input.length; // - Mean squared error
     }
 
     private double evaluate(NeuralNetwork2 nn, double[][] input, double[][] target) {
@@ -175,7 +175,7 @@ public class PSO {
             }
         }
 
-        // Return the average cross-entropy loss
-        return totalLoss / input.length;
+        // Return the negative average cross-entropy loss
+        return -totalLoss / input.length;
     }
 }

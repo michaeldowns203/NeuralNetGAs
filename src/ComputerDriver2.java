@@ -91,7 +91,7 @@ public class ComputerDriver2 {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {6,4};
+                int[] hiddenLayerSizes = {4,2};
                 int outputSize = 1;
                 String activationType = "linear";
 
@@ -100,11 +100,11 @@ public class ComputerDriver2 {
                 double mutationRate = 0.05;
                 double crossoverRate = 0.9;
                 double tolerance = 0.0001;
-                int patience = 20;
+                int patience = 50;
                 GA ga = new GA(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
-                */
+
 
                 int numParticles = 30;
                 int maxIterations = 100;
@@ -117,8 +117,8 @@ public class ComputerDriver2 {
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
+                */
 
-                /*
                 int populationSize = 100;
                 double mutationFactor = 0.5;
                 double crossoverRate = 0.9;
@@ -127,7 +127,7 @@ public class ComputerDriver2 {
                 DE de = new DE(populationSize, maxNoImprovementGenerations, mutationFactor, crossoverRate, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
-                */
+
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -143,9 +143,9 @@ public class ComputerDriver2 {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                //double acrFold = ga.getAverageConvergenceRate();
-                //totalACR += acrFold;
-                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                double acrFold = de.getAverageConvergenceRate();
+                totalACR += acrFold;
+                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

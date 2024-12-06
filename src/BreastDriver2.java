@@ -117,11 +117,11 @@ public class BreastDriver2 {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {6,4};
+                int[] hiddenLayerSizes = {};
                 int outputSize = 2;
                 String activationType = "softmax";
 
-                /*
+
                 int populationSize = 50;
                 double mutationRate = 0.05;
                 double crossoverRate = 0.9;
@@ -130,8 +130,8 @@ public class BreastDriver2 {
                 GAC ga = new GAC(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputsOHE, tolerance, patience);
-                */
 
+                /*
                 int numParticles = 100;
                 int maxIterations = 200;
                 double inertiaWeight = 1.0;
@@ -144,9 +144,9 @@ public class BreastDriver2 {
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
 
-                /*
+
                 int populationSize = 100;
-                int maxNoImprovementGenerations = 20; //lower this probably
+                int maxNoImprovementGenerations = 50; //lower this probably
                 double mutationFactor = 0.5;
                 double crossoverRate = 0.9;
                 double tolerance = 0.0001;

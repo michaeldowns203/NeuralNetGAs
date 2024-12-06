@@ -27,19 +27,19 @@ public class DE {
 
         int generation = 0;
         int noImprovementCount = 0;
-        double previousBestFitness = Double.MAX_VALUE;
+        double previousBestFitness = -Double.MAX_VALUE;
 
         while (noImprovementCount < maxNoImprovementGenerations) {
             for (int i = 0; i < populationSize; i++) {
                 NeuralNetwork2 trial = mutateAndCrossover(i);
                 double trialFitness = evaluate(trial, input, target);
 
-                if (trialFitness < bestFitness[i]) { // Minimization problem
+                if (trialFitness > bestFitness[i]) {
                     population[i] = trial;
                     bestFitness[i] = trialFitness;
 
                     // Update global best individual
-                    if (trialFitness < evaluate(bestIndividual, input, target)) {
+                    if (trialFitness > evaluate(bestIndividual, input, target)) {
                         bestIndividual = trial;
                     }
                 }
@@ -66,19 +66,19 @@ public class DE {
 
         int generation = 0;
         int noImprovementCount = 0;
-        double previousBestFitness = Double.MAX_VALUE;
+        double previousBestFitness = -Double.MAX_VALUE;
 
         while (noImprovementCount < maxNoImprovementGenerations) {
             for (int i = 0; i < populationSize; i++) {
                 NeuralNetwork2 trial = mutateAndCrossover(i);
                 double trialFitness = evaluate(trial, input, target);
 
-                if (trialFitness < bestFitness[i]) { // Minimization problem (lower loss is better)
+                if (trialFitness > bestFitness[i]) {
                     population[i] = trial;
                     bestFitness[i] = trialFitness;
 
                     // Update global best individual
-                    if (trialFitness < evaluate(bestIndividual, input, target)) {
+                    if (trialFitness > evaluate(bestIndividual, input, target)) {
                         bestIndividual = trial;
                     }
                 }
@@ -101,14 +101,14 @@ public class DE {
 
 
     private void initializePopulation(int inputSize) {
-        int[] hiddenLayerSizes = {6, 4};
-        int outputSize = 2;
-        String activationType = "softmax";
+        int[] hiddenLayerSizes = {4, 2};
+        int outputSize = 1;
+        String activationType = "linear";
         population = new NeuralNetwork2[populationSize];
         bestFitness = new double[populationSize];
         for (int i = 0; i < populationSize; i++) {
             population[i] = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
-            bestFitness[i] = Double.MAX_VALUE; // Initialize with large fitness values
+            bestFitness[i] = -Double.MAX_VALUE;
         }
         bestIndividual = population[0];
     }
@@ -179,7 +179,7 @@ public class DE {
             double predicted = nn.forwardPass(input[i])[0]; // Assuming single output
             error += Math.pow(predicted - target[i], 2);
         }
-        return error / input.length; // Mean squared error
+        return  -error / input.length; // Mean squared error
     }
 
     private double evaluate(NeuralNetwork2 nn, double[][] input, double[][] target) {
@@ -200,23 +200,21 @@ public class DE {
         }
 
         // Return the average cross-entropy loss
-        return totalLoss / input.length;
+        return -totalLoss / input.length;
     }
 
     public double getAverageConvergenceRate() {
         double totalConvergenceRate = 0.0;
         int convergenceCount = 0;
-        double previousBestFitness = Double.MAX_VALUE;
+        double previousBestFitness = -Double.MAX_VALUE;
 
         for (int generation = 0; generation < bestFitness.length; generation++) {
             double currentBestFitness = bestFitness[generation];
 
             if (generation > 0) {
-                double improvement = previousBestFitness - currentBestFitness;
-                if (improvement > 0) { // Only consider positive improvements
-                    totalConvergenceRate += improvement;
-                    convergenceCount++;
-                }
+                double improvement = Math.abs(previousBestFitness - currentBestFitness);
+                totalConvergenceRate += improvement;
+                convergenceCount++;
             }
 
             previousBestFitness = currentBestFitness;

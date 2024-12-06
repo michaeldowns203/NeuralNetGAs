@@ -13,7 +13,7 @@ public class PSOC {
             position = copyWeightList(initialWeights);
             velocity = createZeroWeightList(initialWeights);
             bestPosition = copyWeightList(position);
-            bestFitness = Double.POSITIVE_INFINITY; // Higher is worse for a minimization problem
+            bestFitness = -Double.MAX_VALUE; // Higher is worse for a minimization problem
 
             // Randomize velocity
             for (int layer = 0; layer < velocity.size(); layer++) {
@@ -59,7 +59,7 @@ public class PSOC {
         List<double[][]> initialWeights = neuralNetwork.getWeights();
         particles = new Particle[numParticles];
         globalBestPosition = copyWeightList(initialWeights);
-        globalBestFitness = Double.POSITIVE_INFINITY;
+        globalBestFitness = -Double.MAX_VALUE;
 
         Random random = new Random();
 
@@ -76,13 +76,13 @@ public class PSOC {
                 double fitness = evaluate(neuralNetwork, inputs, outputs);
 
                 // Update personal best
-                if (fitness < particle.bestFitness) {
+                if (fitness > particle.bestFitness) {
                     particle.bestFitness = fitness;
                     particle.bestPosition = copyWeightList(particle.position);
                 }
 
                 // Update global best
-                if (fitness < globalBestFitness) {
+                if (fitness > globalBestFitness) {
                     globalBestFitness = fitness;
                     globalBestPosition = copyWeightList(particle.position);
                 }
@@ -166,7 +166,7 @@ public class PSOC {
             }
         }
 
-        // Return the average cross-entropy loss
-        return totalLoss / input.length;
+        // Return the negative average cross-entropy loss
+        return -totalLoss / input.length;
     }
 }
