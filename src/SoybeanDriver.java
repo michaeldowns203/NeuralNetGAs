@@ -206,6 +206,7 @@ public class SoybeanDriver {
 
                 double acrFold = ga.getAverageConvergenceRate();
                 totalACR += acrFold;
+                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
