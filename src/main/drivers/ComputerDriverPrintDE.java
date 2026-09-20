@@ -1,25 +1,20 @@
+package main.drivers;
+
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
 import java.util.*;
 import java.io.*;
 
 //test model - normal 10 fold
-public class ComputerDriverPrintGA {
+public class ComputerDriverPrintDE {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/machine.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = ComputerDriverPrintDE.class.getResourceAsStream("/data/machine.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
-
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
 
             List<List<Object>> dataset = new ArrayList<>();
             String line;
@@ -53,10 +48,7 @@ public class ComputerDriverPrintGA {
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }
@@ -96,17 +88,17 @@ public class ComputerDriverPrintGA {
                 int outputSize = 1;
                 String activationType = "linear";
 
-
+                /*
                 int populationSize = 50;
                 double mutationRate = 0.1;
                 double crossoverRate = 0.8;
                 double tolerance = 0.0001;
                 int patience = 50;
-                GAPrint ga = new GAPrint(populationSize, mutationRate, crossoverRate);
+                GA ga = new GA(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
 
-                /*
+
                 int numParticles = 100;
                 int maxIterations = 50;
                 double inertiaWeight = 0.7;
@@ -118,7 +110,7 @@ public class ComputerDriverPrintGA {
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
-
+                */
 
                 int populationSize = 50;
                 double scalingFactor = 0.5;
@@ -128,7 +120,6 @@ public class ComputerDriverPrintGA {
                 DEPrint de = new DEPrint(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
-                */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -144,7 +135,7 @@ public class ComputerDriverPrintGA {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = ga.getAverageConvergenceRate();
+                double acrFold = de.getAverageConvergenceRate();
                 totalACR += acrFold;
                 System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }

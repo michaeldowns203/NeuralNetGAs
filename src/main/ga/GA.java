@@ -1,3 +1,6 @@
+package main.ga;
+
+import main.utils.NeuralNetwork2;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -6,12 +9,12 @@ import java.util.stream.IntStream;
 
 public class GA {
     private List<NeuralNetwork2> population;
-    private List<Double> fitness; // Store fitness values for each individual
+    private final List<Double> fitness; // Store fitness values for each individual
     private final int populationSize;
     private final double mutationRate;
     private final double crossoverRate;
     private final Random random;
-    private List<Double> fitnessHistory;
+    private final List<Double> fitnessHistory;
 
     public GA(int populationSize, double mutationRate, double crossoverRate) {
         this.populationSize = populationSize;

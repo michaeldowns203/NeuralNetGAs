@@ -1,29 +1,20 @@
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+package main.drivers;
+
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
+import java.io.*;
 import java.util.*;
 
-//10% cross validation for tuning
-public class AbaloneDriver {
+//normal 10 fold
+public class ForestDriver2 {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/abalone.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = ForestDriver2.class.getResourceAsStream("/data/forestfires.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
-
-            // First, count the number of lines to determine the size of the lists
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-            // Reset the reader to the beginning of the file
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
 
             // Initialize the lists
             List<List<Object>> dataset = new ArrayList<>();
@@ -45,11 +36,11 @@ public class AbaloneDriver {
                 List<Object> row = new ArrayList<>();
 
                 // Assign the label (last column)
-                labels.add(Double.parseDouble(rawData[8]));
+                labels.add(Double.parseDouble(rawData[12]));
 
                 // Fill the data row
-                for (int i = 0; i < rawData.length - 2; i++) {
-                    row.add(Double.parseDouble(rawData[i + 1]));
+                for (int i = 0; i < 7; i++) {
+                    row.add(Double.parseDouble(rawData[i + 4]));
                 }
                 row.add(labels.get(lineNum)); // Add the label to the row
                 dataset.add(row);
@@ -58,11 +49,8 @@ public class AbaloneDriver {
 
             stdin.close();
 
-            // Extract stratified tuning data (10%)
-            List<List<Object>> testSet = TenFoldCrossValidation.extractTenPercentR(dataset);
-
             // Split the remaining dataset into stratified chunks
-            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksR10(dataset, 10);
+            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksR(dataset, 10);
 
             // Loss instance variables
             double totalMSE = 0;
@@ -75,14 +63,12 @@ public class AbaloneDriver {
                 List<Double> predictedList = new ArrayList<>();
                 List<Double> actualList = new ArrayList<>();
 
+                List<List<Object>> testSet = chunks.get(i);
 
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }
@@ -118,7 +104,7 @@ public class AbaloneDriver {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {5,3};
+                int[] hiddenLayerSizes = {6,4};
                 int outputSize = 1;
                 String activationType = "linear";
 
@@ -127,11 +113,11 @@ public class AbaloneDriver {
                 double mutationRate = 0.05;
                 double crossoverRate = 0.9;
                 double tolerance = 0.0001;
-                int patience = 50;
+                int patience = 20;
                 GA ga = new GA(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
-
+                */
 
                 int numParticles = 30;
                 int maxIterations = 100;
@@ -144,8 +130,8 @@ public class AbaloneDriver {
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
-                */
 
+                /*
                 int populationSize = 100;
                 double scalingFactor = 0.5;
                 double crossoverProb = 0.9;
@@ -154,6 +140,7 @@ public class AbaloneDriver {
                 DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
+                */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -169,9 +156,9 @@ public class AbaloneDriver {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = de.getAverageConvergenceRate();
-                totalACR += acrFold;
-                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                //double acrFold = ga.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
@@ -185,4 +172,3 @@ public class AbaloneDriver {
         }
     }
 }
-

@@ -1,29 +1,20 @@
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+package main.drivers;
+
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
+import java.io.*;
 import java.util.*;
 
-//10% cross validation for tuning
-public class SoybeanDriver {
+//normal 10 fold
+public class GlassDriver2 {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/soybean-small.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = GlassDriver2.class.getResourceAsStream("/data/glass.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
-
-            // First, count the number of lines to determine the size of the lists
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-            // Reset the reader to the beginning of the file
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
 
             // Initialize the lists
             List<List<Object>> dataset = new ArrayList<>();
@@ -38,12 +29,10 @@ public class SoybeanDriver {
                 List<Object> row = new ArrayList<>();
 
                 // Assign the label (last column)
-                String label = rawData[35];
-                String numLabel = label.replaceAll("[^0-9.]", "");
-                labels.add(Double.parseDouble(numLabel));
+                labels.add(Double.parseDouble(rawData[10]));
 
-                // Fill the data rows
-                for (int i = 0; i < rawData.length - 1; i++) {
+                // Fill the data row (columns 2 to 10)
+                for (int i = 1; i < rawData.length - 1; i++) {
                     row.add(Double.parseDouble(rawData[i]));
                 }
                 row.add(labels.get(lineNum)); // Add the label to the row
@@ -53,15 +42,12 @@ public class SoybeanDriver {
 
             stdin.close();
 
-            // Extract 10% of the dataset for testing
-            List<List<Object>> testSet = TenFoldCrossValidation.extractTenPercentC(dataset);
-
             // Split the remaining dataset into stratified chunks
-            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksC10(dataset, 10);
+            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksC(dataset, 10);
 
             // Loss instance variables
             double total01loss = 0;
-            double totalACR= 0;
+            double totalACR = 0;
 
             for (int i = 0; i < 10; i++) {
                 List<List<Object>> trainingSet = new ArrayList<>();
@@ -70,16 +56,14 @@ public class SoybeanDriver {
                 List<Integer> predictedList = new ArrayList<>();
                 List<Integer> actualList = new ArrayList<>();
 
-                int correctPredictions = 0;
+                List<List<Object>> testSet = chunks.get(i);
 
+                int correctPredictions = 0;
 
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }
@@ -117,10 +101,11 @@ public class SoybeanDriver {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {33,15};
-                int outputSize = 4;
+                int[] hiddenLayerSizes = {6,4};
+                int outputSize = 6;
                 String activationType = "softmax";
 
+                /*
                 int populationSize = 50;
                 double mutationRate = 0.05;
                 double crossoverRate = 0.9;
@@ -129,8 +114,8 @@ public class SoybeanDriver {
                 GAC ga = new GAC(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputsOHE, tolerance, patience);
+                */
 
-                /*
                 int numParticles = 100;
                 int maxIterations = 200;
                 double inertiaWeight = 1.0;
@@ -143,9 +128,9 @@ public class SoybeanDriver {
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
 
-
+                /*
                 int populationSize = 100;
-                int maxNoImprovementGenerations = 50; //lower this probably
+                int maxNoImprovementGenerations = 20; //lower this probably
                 double scalingFactor = 0.5;
                 double crossoverProb = 0.9;
                 double tolerance = 0.0001;
@@ -162,12 +147,16 @@ public class SoybeanDriver {
 
                     if (actual == 0.0)
                         actualClass = 1;
-                    else if (actual < 0.4)
+                    else if (actual < 0.2)
                         actualClass = 2;
-                    else if (actual < 0.8)
+                    else if (actual < 0.4)
                         actualClass = 3;
+                    else if (actual < 0.6)
+                        actualClass = 5;
+                    else if (actual < 0.8)
+                        actualClass = 6;
                     else
-                        actualClass = 4;
+                        actualClass = 7;
 
                     double maxProb = prediction[0];
                     int maxIndex = 0;
@@ -185,8 +174,12 @@ public class SoybeanDriver {
                         predictedList.add(2);
                     else if (maxIndex == 2)
                         predictedList.add(3);
+                    else if (maxIndex == 3)
+                        predictedList.add(5);
+                    else if (maxIndex == 4)
+                        predictedList.add(6);
                     else
-                        predictedList.add(4);
+                        predictedList.add(7);
 
                     actualList.add(actualClass);
 
@@ -194,7 +187,7 @@ public class SoybeanDriver {
                             Arrays.toString(testInputs[t]), predictedList.get(t), actualClass);
 
 
-                    if (predictedList.get(t).equals(actualClass)) {
+                    if (predictedList.get(t) == actualClass) {
                         correctPredictions++;
                     }
                 }
@@ -204,9 +197,9 @@ public class SoybeanDriver {
                 total01loss += loss01;
                 System.out.printf("Fold %d 0/1 loss: %.4f%n", i+1, loss01);
 
-                double acrFold = ga.getAverageConvergenceRate();
-                totalACR += acrFold;
-                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                //double acrFold = de.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
@@ -219,4 +212,5 @@ public class SoybeanDriver {
             e.printStackTrace();
         }
     }
+
 }

@@ -1,3 +1,13 @@
+package main.drivers;
+
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
+
+import main.utils.MinMaxScale;
+import main.utils.TenFoldCrossValidation;
+
 import java.util.*;
 import java.io.*;
 
@@ -5,21 +15,10 @@ import java.io.*;
 public class ComputerDriverPrintPSO {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/machine.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = ComputerDriverPrintPSO.class.getResourceAsStream("/data/machine.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
-
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
 
             List<List<Object>> dataset = new ArrayList<>();
             String line;
@@ -53,10 +52,7 @@ public class ComputerDriverPrintPSO {
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }

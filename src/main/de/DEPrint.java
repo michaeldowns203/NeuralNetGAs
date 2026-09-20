@@ -1,18 +1,21 @@
+package main.de;
+
+import main.utils.NeuralNetwork2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 public class DEPrint {
-    private int populationSize;
-    private int maxNoImprovementGenerations;
-    private double scalingFactor;
-    private double crossoverProb;
-    private double tolerance;
+    private final int populationSize;
+    private final int maxNoImprovementGenerations;
+    private final double scalingFactor;
+    private final double crossoverProb;
+    private final double tolerance;
     private NeuralNetwork2[] population; // Population of neural networks
     private NeuralNetwork2 bestIndividual;
     private double[] bestFitness;
-    private Random random;
+    private final Random random;
 
     public DEPrint(int populationSize, int maxNoImprovementGenerations, double scalingFactor, double crossoverProb, double tolerance) {
         this.populationSize = populationSize;
@@ -235,8 +238,7 @@ public class DEPrint {
             previousBestFitness = currentBestFitness;
         }
 
-        double averageConvergenceRate = (convergenceCount > 0) ? (totalConvergenceRate / convergenceCount) : 0.0;
-        return averageConvergenceRate;
+        return (convergenceCount > 0) ? (totalConvergenceRate / convergenceCount) : 0.0;
     }
 
 

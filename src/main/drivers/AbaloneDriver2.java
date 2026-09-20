@@ -1,43 +1,58 @@
-import java.util.*;
-import java.io.*;
+package main.drivers;
 
-//test model - normal 10 fold
-public class ComputerDriverPrintDE {
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
+import java.io.*;
+import java.util.*;
+
+//10% cross validation for tuning
+public class AbaloneDriver2 {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/machine.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = AbaloneDriver2.class.getResourceAsStream("/data/abalone.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
 
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
-
+            // Initialize the lists
             List<List<Object>> dataset = new ArrayList<>();
-            String line;
+            List<Object> labels = new ArrayList<>();
 
+            String line;
+            //instance variable; flag to skip the first line
+            boolean firstLine = true;
+            int lineNum = 0;
+
+            // Read the file and fill the dataset
             while ((line = stdin.readLine()) != null) {
+                //skips the first line as it includes headers not data
+                if (firstLine) {
+                    firstLine = false;
+                    continue;
+                }
                 String[] rawData = line.split(",");
                 List<Object> row = new ArrayList<>();
-                for (int i = 2; i <= 8; i++) {
-                    row.add(Double.parseDouble(rawData[i]));
+
+                // Assign the label (last column)
+                labels.add(Double.parseDouble(rawData[8]));
+
+                // Fill the data row
+                for (int i = 0; i < rawData.length - 2; i++) {
+                    row.add(Double.parseDouble(rawData[i + 1]));
                 }
+                row.add(labels.get(lineNum)); // Add the label to the row
                 dataset.add(row);
+                lineNum++;
             }
 
             stdin.close();
 
-            //List<List<Object>> testSet = extractTenPercent(dataset);
+            // Split the remaining dataset into stratified chunks
             List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksR(dataset, 10);
 
+            // Loss instance variables
             double totalMSE = 0;
             double totalACR = 0;
 
@@ -53,10 +68,7 @@ public class ComputerDriverPrintDE {
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }
@@ -92,23 +104,23 @@ public class ComputerDriverPrintDE {
                 }
 
                 int inputSize = trainInputs[0].length;
-                int[] hiddenLayerSizes = {4,2};
+                int[] hiddenLayerSizes = {5,3};
                 int outputSize = 1;
                 String activationType = "linear";
 
                 /*
                 int populationSize = 50;
-                double mutationRate = 0.1;
-                double crossoverRate = 0.8;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
                 double tolerance = 0.0001;
-                int patience = 50;
+                int patience = 20;
                 GA ga = new GA(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
+                */
 
-
-                int numParticles = 100;
-                int maxIterations = 50;
+                int numParticles = 30;
+                int maxIterations = 100;
                 double inertiaWeight = 0.7;
                 double cognitiveComponent = 1.5;
                 double socialComponent = 1.5;
@@ -118,16 +130,17 @@ public class ComputerDriverPrintDE {
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
-                */
 
-                int populationSize = 50;
+                /*
+                int populationSize = 100;
                 double scalingFactor = 0.5;
-                double crossoverProb = 0.7;
+                double crossoverProb = 0.9;
                 int maxNoImprovementGenerations = 50;
                 double tolerance = 0.0001;
-                DEPrint de = new DEPrint(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
+                DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
+                */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -143,9 +156,9 @@ public class ComputerDriverPrintDE {
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = de.getAverageConvergenceRate();
-                totalACR += acrFold;
-                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
+                //double acrFold = ga.getAverageConvergenceRate();
+                //totalACR += acrFold;
+                //System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;

@@ -1,19 +1,19 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+package main.ga;
+
+import main.utils.NeuralNetwork2;
+import java.util.*;
 import java.util.stream.IntStream;
 
-public class GAC {
+public class GAPrint {
     private List<NeuralNetwork2> population;
     private List<Double> fitness; // Store fitness values for each individual
     private final int populationSize;
     private final double mutationRate;
     private final double crossoverRate;
     private final Random random;
-    private List<Double> fitnessHistory;
+    private final List<Double> fitnessHistory;
 
-    public GAC(int populationSize, double mutationRate, double crossoverRate) {
+    public GAPrint(int populationSize, double mutationRate, double crossoverRate) {
         this.populationSize = populationSize;
         this.mutationRate = mutationRate;
         this.crossoverRate = crossoverRate;
@@ -25,10 +25,13 @@ public class GAC {
 
     // Initialize population with random individuals
     public void initializePopulation(int inputSize, int[] hiddenLayerSizes, int outputSize, String activationType) {
+        System.out.println("Fitness size before initialization: " + fitness.size());
+        System.out.println("Population size before initialization: " + population.size());
         for (int i = 0; i < populationSize; i++) {
             NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
             population.add(nn);
             fitness.add(0.0); // Initialize fitness to 0
+            System.out.println("Fitness size during initialization: " + fitness.size());
         }
     }
 
@@ -67,35 +70,6 @@ public class GAC {
         }
     }
 
-    // Evaluate the fitness of the population
-    private void evaluateFitness(double[][] input, double[][] target) {
-        for (int i = 0; i < population.size(); i++) {
-            NeuralNetwork2 nn = population.get(i);
-            double loss = evaluate(nn, input, target);
-            fitness.set(i, -loss); // Use negative loss as fitness (higher fitness is better)
-        }
-    }
-
-    // Cross-entropy loss calculation
-    private double evaluate(NeuralNetwork2 nn, double[][] input, double[][] target) {
-        double totalLoss = 0.0;
-        for (int i = 0; i < input.length; i++) {
-            double[] predicted = nn.forwardPass(input[i]); // Softmax output
-            double[] actual = target[i]; // One-hot encoded target
-            totalLoss += crossEntropyLoss(predicted, actual);
-        }
-        return totalLoss / input.length; // Average loss
-    }
-
-    private double crossEntropyLoss(double[] predicted, double[] actual) {
-        double loss = 0.0;
-        for (int i = 0; i < actual.length; i++) {
-            // Avoid log(0) by adding a small constant
-            loss += actual[i] * Math.log(predicted[i] + 1e-15);
-        }
-        return -loss;
-    }
-
     // Perform roulette wheel selection
     private NeuralNetwork2 selectParent() {
         double totalFitness = fitness.stream().mapToDouble(f -> 1.0 / f).sum();
@@ -104,16 +78,25 @@ public class GAC {
 
         for (int i = 0; i < population.size(); i++) {
             cumulativeFitness += 1 / fitness.get(i);
+            System.out.println("Cumulative Fitness: " + cumulativeFitness);
+            System.out.println("Random Value: "+ randomValue);
             if (cumulativeFitness <= randomValue) {
+                System.out.println("Selected Parent at index: " + i + " with fitness: " + fitness.get(i));
                 return population.get(i);
             }
         }
+        System.out.println("Selected Parent at fallback index (last): " + (population.size() - 1));
         return population.get(population.size() - 1); // Fallback
     }
+
 
     // Perform uniform crossover
     private double[] crossover(double[] parent1, double[] parent2) {
         double[] child = new double[parent1.length];
+        System.out.println("Performing Crossover:");
+        System.out.println("Parent 1: " + Arrays.toString(parent1));
+        System.out.println("Parent 2: " + Arrays.toString(parent2));
+
         for (int i = 0; i < parent1.length; i++) {
             if (random.nextDouble() < crossoverRate) {
                 child[i] = parent1[i];
@@ -121,20 +104,49 @@ public class GAC {
                 child[i] = parent2[i];
             }
         }
+
+        System.out.println("Child (after crossover): " + Arrays.toString(child));
         return child;
     }
 
     // Perform mutation
     private void mutate(double[] chromosome) {
+        System.out.println("Performing Mutation:");
+        System.out.println("Original Chromosome: " + Arrays.toString(chromosome));
+
         for (int i = 0; i < chromosome.length; i++) {
             if (random.nextDouble() < mutationRate) {
+                double originalValue = chromosome[i];
                 chromosome[i] += random.nextGaussian() * 0.1; // Small mutation
+                System.out.println("Mutated Gene at index " + i + ": " + originalValue + " -> " + chromosome[i]);
             }
+        }
+
+        System.out.println("Chromosome (after mutation): " + Arrays.toString(chromosome));
+    }
+
+
+
+    private void evaluateFitness(double[][] input, double[] target) {
+        for (int i = 0; i < population.size(); i++) {
+            NeuralNetwork2 nn = population.get(i);
+            double error = evaluate(nn, input, target);
+            fitness.set(i, -error); // Store negative error as fitness
         }
     }
 
+
+    private double evaluate(NeuralNetwork2 nn, double[][] input, double[] target) {
+        double error = 0.0;
+        for (int i = 0; i < input.length; i++) {
+            double predicted = nn.forwardPass(input[i])[0]; // Assuming single output
+            error += Math.pow(predicted - target[i], 2);
+        }
+        return error / input.length; // Mean squared error
+    }
+
     public NeuralNetwork2 run(int inputSize, int[] hiddenLayerSizes, int outputSize, String activationType, double[][] input,
-                              double[][] target, double convergenceThreshold, int patience) {
+                              double[] target, double convergenceThreshold, int patience) {
 
         double previousBestFitness = Double.NEGATIVE_INFINITY;
         int stableGenerations = 0;
@@ -190,6 +202,7 @@ public class GAC {
 
             // Update population
             population = newPopulation;
+            fitness = new ArrayList<>(Collections.nCopies(population.size(), 0.0));
 
             generation++;
         }

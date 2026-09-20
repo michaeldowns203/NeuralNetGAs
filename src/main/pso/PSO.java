@@ -1,3 +1,6 @@
+package main.pso;
+
+import main.utils.NeuralNetwork2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,8 +19,7 @@ public class PSO {
             bestFitness = -Double.MAX_VALUE;
 
             // Randomize velocity
-            for (int layer = 0; layer < velocity.size(); layer++) {
-                double[][] velLayer = velocity.get(layer);
+            for (double[][] velLayer : velocity) {
                 for (int i = 0; i < velLayer.length; i++) {
                     for (int j = 0; j < velLayer[i].length; j++) {
                         velLayer[i][j] = random.nextDouble() * 0.1 - 0.05; // Small random velocity
@@ -37,13 +39,10 @@ public class PSO {
     private final NeuralNetwork2 neuralNetwork;
     private final double[][] inputs;
     private final double[] outputs;
-    private Particle[] particles;
-    private List<double[][]> globalBestPosition;
-    private double globalBestFitness;
 
     public PSO(NeuralNetwork2 neuralNetwork, double[][] inputs, double[] outputs,
-                                     int numParticles, int maxIterations,
-                                     double inertiaWeight, double cognitiveComponent, double socialComponent, double vMax) {
+               int numParticles, int maxIterations,
+               double inertiaWeight, double cognitiveComponent, double socialComponent, double vMax) {
         this.neuralNetwork = neuralNetwork;
         this.inputs = inputs;
         this.outputs = outputs;
@@ -57,9 +56,9 @@ public class PSO {
 
     public List<double[][]> optimize() {
         List<double[][]> initialWeights = neuralNetwork.getWeights();
-        particles = new Particle[numParticles];
-        globalBestPosition = copyWeightList(initialWeights);
-        globalBestFitness = -Double.MAX_VALUE;
+        Particle[] particles = new Particle[numParticles];
+        List<double[][]> globalBestPosition = copyWeightList(initialWeights);
+        double globalBestFitness = -Double.MAX_VALUE;
 
         Random random = new Random();
 

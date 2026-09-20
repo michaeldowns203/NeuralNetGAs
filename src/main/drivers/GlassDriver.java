@@ -1,30 +1,20 @@
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+package main.drivers;
+
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
+import java.io.*;
 import java.util.*;
 
 //10% cross validation for tuning
 public class GlassDriver {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/glass.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = GlassDriver.class.getResourceAsStream("/data/glass.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
-
-            // First, count the number of lines to determine the size of the lists
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-
-            // Reset the reader to the beginning of the file
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
 
             // Initialize the lists
             List<List<Object>> dataset = new ArrayList<>();
@@ -74,10 +64,7 @@ public class GlassDriver {
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }

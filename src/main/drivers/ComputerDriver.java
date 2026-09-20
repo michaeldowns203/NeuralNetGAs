@@ -1,24 +1,19 @@
+package main.drivers;
+
+import main.de.*;
+import main.ga.*;
+import main.pso.*;
+import main.utils.*;
 import java.util.*;
 import java.io.*;
 
-public class ComputerDriver2 {
+public class ComputerDriver {
 
     public static void main(String[] args) throws IOException {
-        String inputFile1 = "src/machine.data";
         try {
-            FileInputStream fis = new FileInputStream(inputFile1);
-            InputStreamReader isr = new InputStreamReader(fis);
+            InputStream input = ComputerDriver.class.getResourceAsStream("/data/machine.data");
+            InputStreamReader isr = new InputStreamReader(input);
             BufferedReader stdin = new BufferedReader(isr);
-
-            int lineCount = 0;
-            while (stdin.readLine() != null) {
-                lineCount++;
-            }
-
-            stdin.close();
-            fis = new FileInputStream(inputFile1);
-            isr = new InputStreamReader(fis);
-            stdin = new BufferedReader(isr);
 
             List<List<Object>> dataset = new ArrayList<>();
             String line;
@@ -34,8 +29,11 @@ public class ComputerDriver2 {
 
             stdin.close();
 
-            //List<List<Object>> testSet = extractTenPercent(dataset);
-            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksR(dataset, 10);
+            // Extract stratified tuning data (10%)
+            List<List<Object>> testSet = TenFoldCrossValidation.extractTenPercentR(dataset);
+
+            // Split the remaining dataset into stratified chunks
+            List<List<List<Object>>> chunks = TenFoldCrossValidation.splitIntoStratifiedChunksR10(dataset, 10);
 
             double totalMSE = 0;
             double totalACR = 0;
@@ -47,15 +45,11 @@ public class ComputerDriver2 {
                 List<Double> predictedList = new ArrayList<>();
                 List<Double> actualList = new ArrayList<>();
 
-                List<List<Object>> testSet = chunks.get(i);
 
                 for (int j = 0; j < 10; j++) {
                     if (j != i) {
                         for (List<Object> row : chunks.get(j)) {
-                            List<Object> all = new ArrayList<>();
-                            for (int k = 0; k < row.size(); k++) {
-                                all.add((Double) row.get(k));
-                            }
+                            List<Object> all = new ArrayList<>(row);
                             trainingSet.add(all);
                         }
                     }
@@ -95,19 +89,19 @@ public class ComputerDriver2 {
                 int outputSize = 1;
                 String activationType = "linear";
 
-
+                /*
                 int populationSize = 50;
-                double mutationRate = 0.1;
-                double crossoverRate = 0.8;
+                double mutationRate = 0.05;
+                double crossoverRate = 0.9;
                 double tolerance = 0.0001;
                 int patience = 50;
                 GA ga = new GA(populationSize, mutationRate, crossoverRate);
                 ga.initializePopulation(inputSize, hiddenLayerSizes, outputSize, activationType);
                 NeuralNetwork2 nn = ga.run(inputSize, hiddenLayerSizes, outputSize, activationType, trainInputs, trainOutputs, tolerance, patience);
 
-                /*
-                int numParticles = 100;
-                int maxIterations = 50;
+
+                int numParticles = 30;
+                int maxIterations = 100;
                 double inertiaWeight = 0.7;
                 double cognitiveComponent = 1.5;
                 double socialComponent = 1.5;
@@ -117,17 +111,16 @@ public class ComputerDriver2 {
                 List <double[][]> weights = pso.optimize();
                 NeuralNetwork2 nn = new NeuralNetwork2(inputSize, hiddenLayerSizes, outputSize, activationType);
                 nn.setWeights(weights);
+                */
 
-
-                int populationSize = 50;
+                int populationSize = 100;
                 double scalingFactor = 0.5;
-                double crossoverProb = 0.7;
+                double crossoverProb = 0.9;
                 int maxNoImprovementGenerations = 50;
                 double tolerance = 0.0001;
                 DE de = new DE(populationSize, maxNoImprovementGenerations, scalingFactor, crossoverProb, tolerance);
 
                 NeuralNetwork2 nn = de.optimize(trainInputs, trainOutputs);
-                */
 
                 for (int t = 0; t < testInputs.length; t++) {
                     double[] prediction = nn.forwardPass(testInputs[t]);
@@ -139,13 +132,13 @@ public class ComputerDriver2 {
                     System.out.printf("Test Instance: %s | Predicted: %.4f | Actual: %.4f%n",
                             Arrays.toString(testInputs[t]), prediction[0], actual);
                 }
+
                 double mse = LossFunctions.calculateMSE(actualList, predictedList);
                 totalMSE += mse;
                 System.out.printf("Fold %d Mean Squared Error: %.4f%n", i+1,  mse);
 
-                double acrFold = ga.getAverageConvergenceRate();
+                double acrFold = de.getAverageConvergenceRate();
                 totalACR += acrFold;
-                System.out.printf("Fold %d Average Convergence Rate: %.4f%n", i+1,  acrFold);
             }
 
             double AACR = totalACR / 10;
